@@ -1,5 +1,5 @@
 ## Flow ChartJS
-__flowChartJs__ is an example of chart plugin, using [ChartJS](https://github.com/nnnick/Chart.js) via [Angular Chart](http://jtblin.github.io/angular-chart.js/)
+__flowChartJs__ is an example of chart plugin for [Angular Flow Chart](https://github.com/Sljux/angular-flow-chart), using [ChartJS](https://github.com/nnnick/Chart.js) via [Angular Chart](http://jtblin.github.io/angular-chart.js/)
 
 ### Options
 - `chartType`: string representing one of chart types supported by ChartJS (line, bar, radar, pie, polar-area, doughnut)
