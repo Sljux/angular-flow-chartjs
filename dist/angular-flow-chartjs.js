@@ -9,17 +9,17 @@ function flowChartJsFactory() {
         require: '^flowChart',
         template: templateFunc,
         scope: {
-            chartType:     '@',
-            chartOptions:  '=',
-            valueProperty: '=',
-            valueDefault:  '=',
-            labelProperty: '=',
-            labelDefault:  '=',
-            series:        '=',
-            click:         '=?',
-            hover:         '=?',
-            legend:        '=',
-            colours:       '=?'
+            chartType:       '@',
+            chartOptions:    '=',
+            valueProperties: '=',
+            valueDefaults:   '=',
+            labelProperty:   '=',
+            labelDefault:    '=',
+            series:          '=',
+            click:           '=?',
+            hover:           '=?',
+            legend:          '=',
+            colours:         '=?'
         },
         link: link
     };
@@ -30,29 +30,33 @@ function flowChartJsFactory() {
         if (angular.isUndefined(chartType))
             return;
 
-        return '<canvas class="chart chart-' + chartType + '" data="[graphData]" ' +
+        return '<canvas class="chart chart-' + chartType + '" data="graphData" ' +
             'options="chartOptions" labels="labels" legend="legend" click="click" hover="hover" series="series" colours="colours"></canvas>';
     }
 
     function link(scope, element, attrs, flowChartCtrl) {
-        var isDefined = angular.isDefined;
+        var isDefined = angular.isDefined,
+            isArray   = angular.isArray,
+            forEach   = angular.forEach;
 
-        var valueProperty = formProperty(scope.valueProperty),
-            labelProperty = formProperty(scope.labelProperty),
-            valueDefault  = isDefined(scope.valueDefault) ? scope.valueDefault : null,
-            labelDefault  = isDefined(scope.labelDefault) ? scope.labelDefault : null,
+        var valueProperties = isArray(scope.valueProperties) ? scope.valueProperties : [scope.valueProperties];
+        valueProperties = valueProperties.map(formProperty);
+
+        var labelProperty = formProperty(scope.labelProperty),
+            valueDefaults = isDefined(scope.valueDefaults) ? scope.valueDefaults : null,
+            labelDefault  = isDefined(scope.labelDefault)  ? scope.labelDefault  : null,
             limit         = flowChartCtrl.limit;
 
         scope.graphData = [];
         scope.labels    = [];
 
         scope.$on('flowChart:init', function (e, data) {
-            scope.graphData = parseData(data, valueProperty, valueDefault);
-            scope.labels = labelProperty ? parseData(data, labelProperty, labelDefault) : range(scope.graphData.length);
+            scope.graphData = parseValues(data, valueProperties, valueDefaults);
+            scope.labels = labelProperty ? parseLabels(data, labelProperty, labelDefault) : range(Math.min(limit, data.length));
         });
 
         scope.$on('flowChart:newDrop', function (e, drop) {
-            var newItem  = extractProperty(drop, valueProperty, valueDefault),
+            var newItem  = extractProperty(drop, valueProperties, valueDefaults),
                 newLabel = labelProperty ? extractProperty(drop, labelProperty) : scope.labels[scope.labels.length - 1] + 1;
 
             scope.graphData.push(newItem);
@@ -68,21 +72,42 @@ function flowChartJsFactory() {
             if (!prop)
                 return '';
 
-            prop = prop.replace(/\./, '.value.');
-            prop = 'elems.' + prop + '.value';
+            prop = prop.replace('.', '.value.');
 
-            return prop;
+            return ['elems'].concat(prop.split('.'), ['value']);
         }
 
-        function parseData(data, property, defaultValue) {
-            return data.slice(-limit).map(function (item) { return extractProperty(item, property, defaultValue) })
+        function parseValues(data, property, defaultValues) {
+            data = data.slice(-limit);
+            var result = Array(property.length);
+
+            for (var i = 0; i < result.length; i++)
+                result[i] = Array(data.length);
+
+            forEach(data, function (item, i) {
+                forEach(property, function (prop, j) {
+                    var defaultValue = isArray(defaultValues) ? defaultValues[j] : defaultValues;
+                    result[j][i] = extractProperty(item, prop, defaultValue)
+                })
+            });
+
+            return result
+        }
+
+        function parseLabels(data, property, defaultValue) {
+            data = data.slice(-limit);
+            var result = Array(data.length);
+
+            forEach(data, function (item, i) {
+                result[i] = extractProperty(item, property, defaultValue)
+            });
+
+            return result
         }
 
         function extractProperty(object, path, defaultValue) {
-            var a = path.split('.');
-
-            for (var i = 0, n = a.length; i < n; ++i) {
-                var k = a[i];
+            for (var i = 0, n = path.length; i < n; ++i) {
+                var k = path[i];
 
                 if (k in object) {
                     object = object[k];
