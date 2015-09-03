@@ -19,7 +19,7 @@ angular.module('app', ['ngFlowChartJs', 'ngFlowChart'])
 
 ## Options
 - `chartType`: `string` representing one of chart types supported by ChartJS (line, bar, radar, pie, polar-area, doughnut)
-- `chartOptions`: options `object` to be passed to ChartJS
+- `chartOptions`: options `object` to be passed to ChartJS (check the [official docs](http://www.chartjs.org/docs/) for more info)
 - `valueProperties`: `string` or an `array of strings` each representing a path to property of the data point object to be used as graph value. 
 If array is passed, a graph will be drawn for each path. Should be in `path.to.prop` form
 - `valueDefaults`: `number` or an `array of numbers` to be used as a default if the data point object doesn't contain property in the given path.
