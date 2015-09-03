@@ -56,14 +56,18 @@ function flowChartJsFactory() {
         });
 
         scope.$on('flowChart:newDrop', function (e, drop) {
-            var newItem  = extractProperty(drop, valueProperties, valueDefaults),
-                newLabel = labelProperty ? extractProperty(drop, labelProperty) : scope.labels[scope.labels.length - 1] + 1;
-
-            scope.graphData.push(newItem);
+            var newLabel = labelProperty ? extractProperty(drop, labelProperty) : scope.labels[scope.labels.length - 1] + 1;
             scope.labels.push(newLabel);
 
+            forEach(valueProperties, function (prop, i) {
+                var valueDefault = isArray(valueDefaults) ? valueDefaults[i] : valueDefaults;
+                scope.graphData[i].push(extractProperty(drop, prop, valueDefault));
+            });
+
             if (scope.graphData.length > limit) {
-                scope.graphData.shift();
+                forEach(scope.graphData, function (_, i) {
+                    scope.graphData[i].shift();
+                });
                 scope.labels.shift();
             }
         });
