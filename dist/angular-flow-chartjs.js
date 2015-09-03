@@ -64,7 +64,7 @@ function flowChartJsFactory() {
                 scope.graphData[i].push(extractProperty(drop, prop, valueDefault));
             });
 
-            if (scope.graphData.length > limit) {
+            if (scope.graphData[0].length > limit) {
                 forEach(scope.graphData, function (_, i) {
                     scope.graphData[i].shift();
                 });
