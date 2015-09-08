@@ -14,18 +14,21 @@ Add script tag to your `index.html`
 
 Include the `ngFlowChartJs` module as a dependency to your module:
 ```js
-angular.module('app', ['ngFlowChartJs', 'ngFlowChart'])
+angular.module('app', ['ngFlowChartJs', 'ngFlowChart', 'flowthings'])
 ```
+
+Full example [here](http://sljux.github.io/angular-flow-chart/)
 
 ## Options
 - `chartType`: `string` representing one of chart types supported by ChartJS (line, bar, radar, pie, polar-area, doughnut)
 - `chartOptions`: options `object` to be passed to ChartJS (check the [official docs](http://www.chartjs.org/docs/) for more info)
-- `valueProperties`: `string` or an `array of strings` each representing a path to property of the data point object to be used as graph value. 
-If array is passed, a graph will be drawn for each path. Should be in `path.to.prop` form
+- `valueProperties`: `string` or an `array of strings` each representing a path to property of the data object to be used as graph value. 
+If array is passed, a graph will be drawn for each path. Strings should be in `path.to.prop` form
 - `valueDefaults`: `number` or an `array of numbers` to be used as a default if the data point object doesn't contain property in the given path.
 Defaults to `null`, resulting in graph points not being drawn. If a single value is passed, it will be used as default for all graphs
-- `labelProperty`: `string` representing a path to property of the data point object to be used as chart label. Should be in `path.to.prop` form.
-If nothing is passed, the labels are auto incremented integers starting at 0
+- `labelProperty`: `string` or `boolean`. If `string` is passed, it will be used as a path to a property of the data object to be used as
+label. It should be in `path.to.prop` form. Passing `true` will generate auto incremented labels, starting at 0. Passing `false` will
+not display labels
 - `labelDefault`: used if `labelProperty` is passed. `Number` representing default label value if the data point object 
 doesn't contain property in the given label path
 - `series`, `click`, `hover`, `legend` and `colours` are directly passed to [Angular Chart](http://jtblin.github.io/angular-chart.js/) directive
@@ -38,6 +41,7 @@ doesn't contain property in the given label path
     <flow-chart-js
         value-properties="chart.valueProp"
         value-defaults="chart.valueDefaults"
+        label-property="chart.labelProperty"
         chart-type="line"
         chart-options="chart.options"
         series="chart.series"
@@ -62,6 +66,8 @@ angular.module('ngFlowThingsApp')
             /* or valueProp: 'inside.humidity' */
             valueDefaults: 0,
             /* or valueDefaults: [3, -7] */
+            labelProperty: 'datetime'
+            /* or labelProperty: true */
             legend: true
         }
     });

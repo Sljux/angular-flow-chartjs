@@ -35,14 +35,27 @@ function flowChartJsFactory() {
     }
 
     function link(scope, element, attrs, flowChartCtrl) {
-        var isDefined = angular.isDefined,
+        var LabelMode = {
+            NONE: 0,
+            AUTO: 1,
+            PROP: 2
+        };
+
+        if (Object.freeze) {
+            Object.freeze(LabelMode)
+        }
+
+        var forEach   = angular.forEach,
+            isDefined = angular.isDefined,
+            isString  = angular.isString,
             isArray   = angular.isArray,
-            forEach   = angular.forEach;
+            isBool    = function (val) {
+                return val === true || val === false || toString.call(val) === '[object Boolean]'
+            };
 
-        var valueProperties = isArray(scope.valueProperties) ? scope.valueProperties : [scope.valueProperties];
-        valueProperties = valueProperties.map(formProperty);
-
-        var labelProperty = formProperty(scope.labelProperty),
+        var valueProperties = parseValueProperty(),
+            labelMode,
+            labelProperty = parseLabelProperty(),
             valueDefaults = isDefined(scope.valueDefaults) ? scope.valueDefaults : null,
             labelDefault  = isDefined(scope.labelDefault)  ? scope.labelDefault  : null,
             limit         = flowChartCtrl.limit;
@@ -52,12 +65,11 @@ function flowChartJsFactory() {
 
         scope.$on('flowChart:init', function (e, data) {
             scope.graphData = parseValues(data, valueProperties, valueDefaults);
-            scope.labels = labelProperty ? parseLabels(data, labelProperty, labelDefault) : range(Math.min(limit, data.length));
+            scope.labels = initLabels(data);
         });
 
         scope.$on('flowChart:newDrop', function (e, drop) {
-            var newLabel = labelProperty ? extractProperty(drop, labelProperty) : scope.labels[scope.labels.length - 1] + 1;
-            scope.labels.push(newLabel);
+            scope.labels.push(formNewLabel(drop));
 
             forEach(valueProperties, function (prop, i) {
                 var valueDefault = isArray(valueDefaults) ? valueDefaults[i] : valueDefaults;
@@ -66,11 +78,59 @@ function flowChartJsFactory() {
 
             if (scope.graphData[0].length > limit) {
                 forEach(scope.graphData, function (_, i) {
-                    scope.graphData[i].shift();
+                    scope.graphData[i] = scope.graphData[i].slice(1);
                 });
-                scope.labels.shift();
+                scope.labels = scope.labels.slice(1);
             }
         });
+
+        function parseValueProperty() {
+            var result = isArray(scope.valueProperties) ? scope.valueProperties : [scope.valueProperties];
+            return result.map(formProperty)
+        }
+
+        function parseLabelProperty() {
+            if (isBool(scope.labelProperty)) {
+                labelMode = scope.labelProperty ? LabelMode.AUTO : LabelMode.NONE;
+                return scope.labelProperty
+            } else if (isString(scope.labelProperty)) {
+                labelMode = LabelMode.PROP;
+                return formProperty(scope.labelProperty)
+            } else {
+                labelMode = LabelMode.NONE;
+                return false;
+            }
+        }
+
+        function initLabels(data) {
+            switch (labelMode) {
+                case LabelMode.NONE:
+                    return arrayOfEmptyStrings(data.length);
+                case LabelMode.AUTO:
+                    return range(Math.min(limit, data.length));
+                case LabelMode.PROP:
+                    return parseLabels(data, labelProperty, labelDefault);
+                default:
+                    return arrayOfEmptyStrings(data.length);
+            }
+
+            function arrayOfEmptyStrings(length) {
+                return Array.apply(null, new Array(length)).map(String.prototype.valueOf, '');
+            }
+        }
+
+        function formNewLabel(drop) {
+            switch (labelMode) {
+                case LabelMode.NONE:
+                    return '';
+                case LabelMode.AUTO:
+                    return scope.labels[scope.labels.length - 1] + 1;
+                case LabelMode.PROP:
+                    return extractProperty(drop, labelProperty, labelDefault);
+                default:
+                    return '';
+            }
+        }
 
         function formProperty(prop) {
             if (!prop)
